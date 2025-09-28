@@ -23,13 +23,15 @@ async function main() {
       await db.getMessages(conversationId),
     );
 
-    if (response?.name === 'makeLunchBooking') {
-      console.log(`Wants lunch`);
+    if (!response) throw new Error('No response');
+
+    if (typeof response !== 'string' && response.name === 'makeLunchBooking') {
+      console.log(`Wants lunch`, response.parameters);
       break;
-    } else if (response?.name === 'askClarifyingQuestion') {
-      const responseText = response?.parameters.content;
-      await db.addBotMessage(conversationId, responseText);
-      console.log(responseText);
+    } else {
+      const followup = typeof response === 'string' ? response : response.parameters.content;
+      await db.addBotMessage(conversationId, followup);
+      console.log(followup);
     }
   }
 }

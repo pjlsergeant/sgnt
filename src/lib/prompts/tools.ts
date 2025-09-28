@@ -132,7 +132,8 @@ export class PromptTools<
       };
     }[];
   },
-> implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, ToolDescription>
+> implements
+    Prompt<Args, ClientResponse, ParseInput | string, ParseOutput | string, ToolDescription>
 {
   // protected compiledParser: Validator<any, Schema>;
 
@@ -140,6 +141,7 @@ export class PromptTools<
     public tools: Tools,
     public parser: (input: ParseInput) => ParseOutput,
     public renderPrompt: RenderPromptFn<Args>,
+    public toolChoice?: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming['tool_choice'],
   ) {
     // this.compiledParser = Compile(outputSchema);
   }
@@ -150,17 +152,23 @@ export class PromptTools<
     if (message.refusal) throw new Error(`Refusal: ${message.refusal}`);
 
     const toolCalls = message.tool_calls;
-    if (!toolCalls) throw new Error('Empty content');
+    if (!toolCalls) {
+      const content = message.content;
+      if (!content) throw new Error(`Empty content`);
+      return content;
+    }
 
     return toolCalls as ParseInput;
   }
 
-  parse(input: ParseInput) {
+  parse(input: ParseInput | string) {
+    if (typeof input === 'string') return input as string;
     return this.parser(input);
   }
 
   describeStructure = (() => {
     return {
+      ...(this.toolChoice ? { tool_choice: this.toolChoice } : {}),
       tools: this.tools.map((t) => ({
         type: 'function',
         function: {
