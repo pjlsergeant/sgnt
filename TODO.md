@@ -1,4 +1,5 @@
 # TODO
 
-- Genericize the loop
++ Genericize main-loop to handle chat-eg
+
 
