@@ -1,8 +1,9 @@
 import { LlmClient } from '~/lib/services/llm/client';
 import promptSync from 'prompt-sync';
-import { PromptLunchBotTool } from '~/lib/prompts/lunch-bot-tool';
+import { PromptLunchBotTool } from '~/examples/lunch-bot/prompt-tool';
 import { ConversationDbInMemory } from '~/lib/services/conversation-db/in-memory';
 import { MainLoop } from '~/lib/services/main-loop';
+import { makeDispatcher } from '~/examples/lunch-bot/dispatcher';
 
 async function main() {
   const db = new ConversationDbInMemory();
@@ -13,20 +14,7 @@ async function main() {
     conversationDb: db,
     client,
     prompt: PromptLunchBotTool,
-    dispatcher: async (_loop, conversationId, _messages, responseArray) => {
-      const [response] = responseArray;
-
-      if (!response) throw new Error('No response');
-
-      if (typeof response !== 'string' && response.name === 'makeLunchBooking') {
-        console.log(`Wants lunch`, response.parameters);
-        return null;
-      } else {
-        const followup = typeof response === 'string' ? response : response.parameters.content;
-        await db.addBotMessage(conversationId, followup);
-        return followup;
-      }
-    },
+    dispatcher: makeDispatcher(db),
   });
 
   const conversationId = await db.createConversation(1);

@@ -17,3 +17,6 @@ export interface Prompt<
   extract: (response: ClientResponse) => ParseInput;
   parse: (input: ParseInput) => ParseOutput;
 }
+
+export type PromptOutput<P extends Prompt<any, any, any, any, any>> =
+  P extends Prompt<any, any, any, infer R, any> ? R : never;
