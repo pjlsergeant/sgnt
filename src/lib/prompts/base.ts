@@ -1,13 +1,6 @@
-import OpenAI from 'openai';
+import type { OpenAiChatCompletionMessageParam } from '~/lib/prompts/openai-types';
 
-export type OpenAiChatCompletion = OpenAI.Chat.Completions.ChatCompletion;
-export type OpenAiChatCompletionMessageParam = OpenAI.Chat.Completions.ChatCompletionMessageParam;
-export type OpenAiChatCompletionCreateParamsNonStreaming =
-  OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
-
-export type OpenAiMessages = (OpenAiChatCompletionMessageParam & {
-  content: string;
-})[];
+export type OpenAiMessages = OpenAiChatCompletionMessageParam[];
 export type RenderPromptFn<Args extends unknown[]> = (...args: Args) => string | OpenAiMessages;
 
 export interface Prompt<

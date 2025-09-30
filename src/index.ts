@@ -1,12 +1,11 @@
+export type { Prompt, PromptOutput, RenderPromptFn, OpenAiMessages } from '~/lib/prompts/base';
 export type {
-  Prompt,
-  PromptOutput,
-  RenderPromptFn,
-  OpenAiMessages,
   OpenAiChatCompletion,
+  OpenAiChatCompletionMessage,
   OpenAiChatCompletionMessageParam,
+  OpenAiChatCompletionToolCall,
   OpenAiChatCompletionCreateParamsNonStreaming,
-} from '~/lib/prompts/base';
+} from '~/lib/prompts/openai-types';
 export { PromptSchema } from '~/lib/prompts/schema';
 export { defineTool, defineTools, PromptTools, ToolCallError } from '~/lib/prompts/tools';
 export type {

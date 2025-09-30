@@ -59,8 +59,6 @@ export class LlmClient {
           : {}),
       } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
 
-      console.dir(config, { depth: null });
-
       return client.chat.completions.create(config);
     };
 

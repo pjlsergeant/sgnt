@@ -1,12 +1,11 @@
 import Type, { Static } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
 import { TLocalizedValidationError } from 'typebox/error';
-import {
+import type {
   OpenAiChatCompletion,
   OpenAiChatCompletionCreateParamsNonStreaming,
-  Prompt,
-  RenderPromptFn,
-} from '~/lib/prompts/base';
+} from '~/lib/prompts/openai-types';
+import { Prompt, RenderPromptFn } from '~/lib/prompts/base';
 
 //
 // A single tool *definition*, eg what we use when we're creating it
