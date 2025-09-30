@@ -31,7 +31,7 @@ export class PromptSchema<
     this.compiledParser = Compile(outputSchema);
   }
 
-  extract(response: ClientResponse) {
+  extract(response: ClientResponse): ParseInput {
     const message = response.choices[0]?.message;
     if (!message) throw new Error(`No choices returned`);
     if (message.refusal) throw new Error(`Refusal: ${message.refusal}`);
