@@ -6,16 +6,27 @@
   "type": "module",
   "scripts": {
     "dev": "vitest watch",
-    "build": "tsc --noEmit",
+    "build": "tsc && tsc-alias",
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "check": "npm run build && npm run test && npm run lint && npm run format",
-    "prepare": "husky"
+    "check": "tsc --noEmit && npm run test && npm run lint && npm run format",
+    "prepare": "npm run build && husky"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@types/express": "^5.0.3",
@@ -32,6 +43,7 @@
     "globals": "^16.2.0",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
