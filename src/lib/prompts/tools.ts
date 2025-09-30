@@ -1,8 +1,12 @@
-import OpenAI from 'openai';
 import Type, { Static } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
 import { TLocalizedValidationError } from 'typebox/error';
-import { Prompt, RenderPromptFn } from '~/lib/prompts/base';
+import {
+  OpenAiChatCompletion,
+  OpenAiChatCompletionCreateParamsNonStreaming,
+  Prompt,
+  RenderPromptFn,
+} from '~/lib/prompts/base';
 
 //
 // A single tool *definition*, eg what we use when we're creating it
@@ -61,6 +65,19 @@ const toolCallWiresC = Compile(Type.Array(toolCallWire));
 
 export type ToolCallWire = Static<typeof toolCallWire>;
 
+type PromptToolsStructure<Tools extends ToolDefinitions> = {
+  tool_choice?: OpenAiChatCompletionCreateParamsNonStreaming['tool_choice'];
+  tools: {
+    type: 'function';
+    function: {
+      name: Tools[number]['name'];
+      description: string;
+      strict: true;
+      parameters: any;
+    };
+  }[];
+};
+
 export class ToolCallError extends Error {
   constructor(
     message: string,
@@ -117,21 +134,11 @@ export const defineTools = <const T extends ToolDefinitions>(ts: T) => {
 
 export class PromptTools<
   Args extends unknown[],
-  ClientResponse extends OpenAI.Chat.Completions.ChatCompletion,
   ParseInput extends ToolCallWire[],
   ParseOutput extends ToolResponses<Tools>,
   Tools extends ToolDefinitions,
-  ToolDescription extends {
-    tools: {
-      type: 'function';
-      function: {
-        name: string;
-        description: string;
-        strict: true;
-        parameters: any;
-      };
-    }[];
-  },
+  ToolDescription extends PromptToolsStructure<Tools>,
+  ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
 > implements
     Prompt<Args, ClientResponse, ParseInput | string, ParseOutput | string, ToolDescription>
 {
@@ -141,7 +148,7 @@ export class PromptTools<
     public tools: Tools,
     public parser: (input: ParseInput) => ParseOutput,
     public renderPrompt: RenderPromptFn<Args>,
-    public toolChoice?: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming['tool_choice'],
+    public toolChoice?: OpenAiChatCompletionCreateParamsNonStreaming['tool_choice'],
   ) {
     // this.compiledParser = Compile(outputSchema);
   }

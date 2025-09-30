@@ -1,23 +1,24 @@
-import OpenAI from 'openai';
 import { Static, TSchema } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
-import { Prompt, RenderPromptFn } from '~/lib/prompts/base';
+import { OpenAiChatCompletion, Prompt, RenderPromptFn } from '~/lib/prompts/base';
+
+type PromptSchemaStructure<Schema extends TSchema> = {
+  response_format: {
+    type: 'json_schema';
+    json_schema: {
+      name: 'prompt_output';
+      schema: Static<Schema>;
+    };
+  };
+};
 
 export class PromptSchema<
   Args extends unknown[],
-  ClientResponse extends OpenAI.Chat.Completions.ChatCompletion,
   ParseInput extends Record<string, any>,
   ParseOutput,
   Schema extends TSchema,
-  ToolDescription extends {
-    response_format: {
-      type: 'json_schema';
-      json_schema: {
-        name: 'prompt_output';
-        schema: Static<Schema>;
-      };
-    };
-  },
+  ToolDescription extends PromptSchemaStructure<Schema>,
+  ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
 > implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, ToolDescription>
 {
   protected compiledParser: Validator<any, Schema>;
