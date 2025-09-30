@@ -1,11 +1,9 @@
 import OpenAI from 'openai';
-import pThrottle from 'p-throttle';
 
 import { defaultCompletion, ModelName, models } from './models';
 import type { Prompt } from '~/lib/prompts/base';
 
 export class LlmClient {
-  throttle: ReturnType<typeof pThrottle> | null = null;
   defaultCompletion: ModelName = defaultCompletion;
 
   _openAiClient: OpenAI;
@@ -27,7 +25,6 @@ export class LlmClient {
     const baseClient: OpenAI = service === 'openai' ? this._openAiClient : this._openRouterClient;
 
     // Add any observers here
-
     const client = baseClient;
     return client;
   }
@@ -67,8 +64,6 @@ export class LlmClient {
       return client.chat.completions.create(config);
     };
 
-    const throttled = this.throttle ? this.throttle(fn) : () => Promise.resolve(fn());
-
     const attempts = [
       ['initial attempt', 'debug', false],
       ['retry', 'warn', true],
@@ -78,7 +73,7 @@ export class LlmClient {
       const [label, logLevel, fatal] = attempt;
 
       try {
-        const wholeClientResponse = await throttled();
+        const wholeClientResponse = await fn();
         const relevantClientResponse = prompt.extract(wholeClientResponse);
         const payload = prompt.parse(relevantClientResponse);
 

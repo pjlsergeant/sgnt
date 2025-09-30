@@ -1,6 +1,5 @@
-// import { randomUUID } from 'crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ConversationDb2 } from '~/lib/services/conversation-db/base';
+import { ConversationDb } from '~/lib/services/conversation-db/base';
 import { ConversationDbInMemory } from '~/lib/services/conversation-db/in-memory';
 
 function conversationDbFromEnv() {
@@ -8,7 +7,7 @@ function conversationDbFromEnv() {
 }
 
 // Test variables
-let conversationDb: ConversationDb2;
+let conversationDb: ConversationDb;
 // const dateDiff = (then: Date) => Date.now() - then.getTime();
 
 function newUsername() {
