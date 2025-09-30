@@ -15,10 +15,10 @@ type PromptSchemaStructure<Schema extends TSchema> = {
 
 export class PromptSchema<
   Args extends unknown[],
-  ParseInput extends Record<string, any>,
-  ParseOutput,
   Schema extends TSchema,
-  ToolDescription extends PromptSchemaStructure<Schema>,
+  ParseInput = Static<Schema>,
+  ParseOutput = Static<Schema>,
+  ToolDescription extends PromptSchemaStructure<Schema> = PromptSchemaStructure<Schema>,
   ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
 > implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, ToolDescription>
 {
