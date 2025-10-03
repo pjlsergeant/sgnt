@@ -8,7 +8,7 @@ type PromptSchemaStructure<Schema extends TSchema> = {
     type: 'json_schema';
     json_schema: {
       name: 'prompt_output';
-      schema: Static<Schema>;
+      schema: Schema;
     };
   };
 };
@@ -18,9 +18,9 @@ export class PromptSchema<
   Schema extends TSchema,
   ParseInput = Static<Schema>,
   ParseOutput = Static<Schema>,
-  ToolDescription extends PromptSchemaStructure<Schema> = PromptSchemaStructure<Schema>,
+  SchemaDescription extends PromptSchemaStructure<Schema> = PromptSchemaStructure<Schema>,
   ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
-> implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, ToolDescription>
+> implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, SchemaDescription>
 {
   protected compiledParser: Validator<any, Schema>;
 
@@ -56,5 +56,5 @@ export class PromptSchema<
         },
       },
     };
-  }) as () => ToolDescription;
+  }) as () => SchemaDescription;
 }

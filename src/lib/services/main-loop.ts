@@ -1,31 +1,41 @@
+import { nextTick } from 'process';
 import { Prompt } from '~/lib/prompts/base';
 import { ConversationDb, ConversationId, DbMessage } from '~/lib/services/conversation-db/base';
 import { LlmClient } from '~/lib/services/llm/client';
+import { defaultCompletion } from '~/lib/services/llm/models';
+
+export type DefaultDispatcherResponses = {
+  name: string;
+  content: string;
+  toolCallId?: string;
+  metaData?: Record<string, any>;
+}[];
 
 type MainLoopConstructorArgs<
-  LlmResponse,
+  ParseOutput,
   Messages = DbMessage[],
-  DispatcherResponse = string | null,
+  DispatcherResponses = DefaultDispatcherResponses,
 > = {
   conversationDb: ConversationDb;
   client: LlmClient;
-  prompt: Prompt<[Messages], any, any, LlmResponse, any>;
+  prompt: Prompt<[Messages], any, any, ParseOutput, any>;
   dispatcher: (
-    loop: MainLoop<LlmResponse>,
+    loop: MainLoop<ParseOutput>,
     conversationId: string,
     messages: Messages,
-    response: LlmResponse,
-  ) => Promise<DispatcherResponse>;
+    response: ParseOutput,
+  ) => Promise<DispatcherResponses>;
+  askUser: (what: string) => Promise<string>;
 };
 
 type ProcessArgs = {
   conversationId: ConversationId;
 };
 
-export class MainLoop<Response> {
-  p: Required<MainLoopConstructorArgs<Response>>;
+export class MainLoop<ParseOutput> {
+  p: Required<MainLoopConstructorArgs<ParseOutput>>;
 
-  constructor(params: MainLoopConstructorArgs<Response>) {
+  constructor(params: MainLoopConstructorArgs<ParseOutput>) {
     this.p = params;
   }
 
@@ -34,12 +44,35 @@ export class MainLoop<Response> {
     const messages = await this.p.conversationDb.getMessages(args.conversationId);
 
     // Complete the prompt using it
-    const response = await this.p.client.completePrompt(this.p.prompt, 'gpt-5-mini', messages);
+    const [response, rawResponse] = await this.p.client.completePrompt(
+      this.p.prompt,
+      defaultCompletion,
+      messages,
+    );
+    await this.p.conversationDb.addBotMessage(args.conversationId, rawResponse);
 
-    const responseAsText = typeof response === 'string' ? response : JSON.stringify(response);
-    await this.p.conversationDb.addBotMessage(args.conversationId, responseAsText);
+    // This is where we either prompt the user or call the dispatcher for the
+    // tools
+    if (typeof response === 'string') {
+      const userResponse = await this.p.askUser(response);
+      await this.p.conversationDb.addUserMessage(args.conversationId, userResponse);
+    } else {
+      // Get all the tool response messages to write
+      const toolResponses = await this.p.dispatcher(this, args.conversationId, messages, response);
 
-    // Determine what to do next
-    return await this.p.dispatcher(this, args.conversationId, messages, response);
+      for (const toolResponse of toolResponses) {
+        await this.p.conversationDb.addToolMessage(
+          args.conversationId,
+          toolResponse.name,
+          toolResponse.content,
+          toolResponse.toolCallId,
+          toolResponse.metaData,
+        );
+      }
+    }
+
+    const fn = this.process.bind(this);
+
+    nextTick(() => fn(args));
   }
 }

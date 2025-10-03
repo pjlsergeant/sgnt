@@ -18,7 +18,12 @@ const dbFromToRole = { user: 'user', bot: 'assistant', tool: 'tool' } as const;
 export function dbMessageToOpenAi(msgs: DbMessage[]): OpenAiMessages {
   return msgs.map((m) => {
     if (m.from === 'tool') {
-      return { role: 'tool', content: m.message, tool_call_id: 'hi' };
+      return {
+        role: 'tool',
+        content: m.message,
+        name: String(m.metadata?.toolName ?? '[unknown tool name]'),
+        tool_call_id: String(m.metadata?.toolCallId ?? '[unknown tool call id]'),
+      };
     } else {
       return { role: dbFromToRole[m.from], content: m.message };
     }
@@ -46,6 +51,13 @@ export interface ConversationDb {
   addBotMessage(
     conversationId: ConversationId,
     message: string,
+    metadata?: Metadata,
+  ): Promise<MessageId>;
+  addToolMessage(
+    conversationId: ConversationId,
+    toolName: string,
+    message: string,
+    toolCallId?: string,
     metadata?: Metadata,
   ): Promise<MessageId>;
   updateMessageMetadata(messageId: MessageId, merge: boolean, metadata: Metadata): Promise<void>;
@@ -90,12 +102,19 @@ export abstract class ConversationDbBase<X> implements ConversationDb {
   abstract addUserMessage(
     conversationId: ConversationId,
     message: string,
-    metadata: Metadata,
+    metadata?: Metadata,
   ): Promise<MessageId>;
   abstract addBotMessage(
     conversationId: ConversationId,
     message: string,
-    metadata: Metadata,
+    metadata?: Metadata,
+  ): Promise<MessageId>;
+  abstract addToolMessage(
+    conversationId: ConversationId,
+    toolName: string,
+    message: string,
+    toolCallId?: string,
+    metadata?: Metadata,
   ): Promise<MessageId>;
   abstract updateMessageMetadata(
     messageId: MessageId,

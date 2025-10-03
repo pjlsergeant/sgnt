@@ -119,10 +119,24 @@ export class ConversationDbInMemory extends ConversationDbBase<null> {
     return this.addMessage(conversationId, message, 'bot', metadata);
   }
 
+  async addToolMessage(
+    conversationId: ConversationId,
+    toolName: string,
+    message: string,
+    toolCallId?: string,
+    metadata?: Metadata,
+  ): Promise<MessageId> {
+    const writeMetadata: Metadata = metadata ?? {};
+    writeMetadata['toolName'] = toolName;
+    if (toolCallId) writeMetadata['toolCallId'] = toolCallId;
+
+    return this.addMessage(conversationId, message, 'tool', writeMetadata);
+  }
+
   private async addMessage(
     conversationId: ConversationId,
     message: string,
-    from: 'user' | 'bot',
+    from: 'user' | 'bot' | 'tool',
     metadata?: Metadata,
   ): Promise<MessageId> {
     const conversation = this.conversations.get(conversationId);
