@@ -21,7 +21,6 @@ type MainLoopConstructorArgs<
   prompt: Prompt<[Messages], any, any, ParseOutput, any>;
   dispatcher: (
     loop: MainLoop<ParseOutput>,
-    conversationId: string,
     messages: Messages,
     response: ParseOutput,
   ) => Promise<DispatcherResponses>;
@@ -49,19 +48,22 @@ export class MainLoop<ParseOutput> {
       defaultCompletion,
       messages,
     );
-    await this.p.conversationDb.addBotMessage(args.conversationId, rawResponse);
 
     // This is where we either prompt the user or call the dispatcher for the
     // tools
     if (typeof response === 'string') {
+      await this.p.conversationDb.addBotMessage(args.conversationId, rawResponse);
+
       const userResponse = await this.p.askUser(response);
       await this.p.conversationDb.addUserMessage(args.conversationId, userResponse);
     } else {
+      await this.p.conversationDb.addToolsRequest(args.conversationId, rawResponse);
+
       // Get all the tool response messages to write
-      const toolResponses = await this.p.dispatcher(this, args.conversationId, messages, response);
+      const toolResponses = await this.p.dispatcher(this, messages, response);
 
       for (const toolResponse of toolResponses) {
-        await this.p.conversationDb.addToolMessage(
+        await this.p.conversationDb.addToolResponse(
           args.conversationId,
           toolResponse.name,
           toolResponse.content,

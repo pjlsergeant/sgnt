@@ -1,6 +1,6 @@
 import { PromptFileFinder } from '~/examples/file-finder/prompt';
 import { PromptOutput } from '~/lib/prompts/base';
-import { ConversationDb, ConversationId, DbMessage } from '~/lib/services/conversation-db/base';
+import { ConversationDb, DbMessage } from '~/lib/services/conversation-db/base';
 import { DefaultDispatcherResponses, MainLoop } from '~/lib/services/main-loop';
 import promptSync from 'prompt-sync';
 import { execa } from 'execa';
@@ -17,12 +17,11 @@ import { execa } from 'execa';
 // {
 
 export function makeDispatcher<ParseOutput extends PromptOutput<typeof PromptFileFinder>>(
-  db: ConversationDb,
+  _db: ConversationDb,
   prompt: promptSync.Prompt,
 ) {
   return async function dispatcher(
     _loop: MainLoop<ParseOutput>,
-    conversationId: ConversationId,
     _messages: DbMessage[],
     toolCallsRequested: Exclude<ParseOutput, string>,
   ): Promise<DefaultDispatcherResponses> {
@@ -75,6 +74,8 @@ export function makeDispatcher<ParseOutput extends PromptOutput<typeof PromptFil
         toolOutput += '\n' + (err as Error).stack;
       }
 
+      toolOutput ||= '[no output]';
+
       let summary = '';
       if (!toolSuccess) {
         summary += 'FAILED';
@@ -84,7 +85,7 @@ export function makeDispatcher<ParseOutput extends PromptOutput<typeof PromptFil
           summary += ` to spawn command\n`;
         }
 
-        console.error(summary);
+        console.error(summary + toolOutput.substring(0, 256));
       } else {
         console.log(toolOutput.substring(0, 256) + (toolOutput.length > 256 ? '...' : ''));
       }

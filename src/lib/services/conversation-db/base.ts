@@ -25,7 +25,13 @@ export function dbMessageToOpenAi(msgs: DbMessage[]): OpenAiMessages {
         tool_call_id: String(m.metadata?.toolCallId ?? '[unknown tool call id]'),
       };
     } else {
-      return { role: dbFromToRole[m.from], content: m.message };
+      return {
+        role: dbFromToRole[m.from],
+        content: m.message,
+        ...(m.metadata?.toolCalls
+          ? { tool_calls: JSON.parse(m.metadata.toolCalls as string) }
+          : {}),
+      };
     }
   });
 }
@@ -53,7 +59,12 @@ export interface ConversationDb {
     message: string,
     metadata?: Metadata,
   ): Promise<MessageId>;
-  addToolMessage(
+  addToolsRequest(
+    conversationId: ConversationId,
+    message: string,
+    metadata?: Metadata,
+  ): Promise<MessageId>;
+  addToolResponse(
     conversationId: ConversationId,
     toolName: string,
     message: string,
@@ -109,7 +120,12 @@ export abstract class ConversationDbBase<X> implements ConversationDb {
     message: string,
     metadata?: Metadata,
   ): Promise<MessageId>;
-  abstract addToolMessage(
+  abstract addToolsRequest(
+    conversationId: ConversationId,
+    message: string,
+    metadata?: Metadata,
+  ): Promise<MessageId>;
+  abstract addToolResponse(
     conversationId: ConversationId,
     toolName: string,
     message: string,

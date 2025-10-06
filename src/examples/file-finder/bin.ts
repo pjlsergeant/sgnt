@@ -14,7 +14,7 @@ async function main() {
     conversationDb: db,
     client,
     prompt: PromptFileFinder as any,
-    askUser: async (msg: string) => userPrompt(msg),
+    askUser: async (msg: string) => userPrompt(msg + '\n> '),
     dispatcher: makeDispatcher(db, userPrompt) as any,
   });
 
