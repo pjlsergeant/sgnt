@@ -43,11 +43,9 @@ export class MainLoop<ParseOutput> {
     const messages = await this.p.conversationDb.getMessages(args.conversationId);
 
     // Complete the prompt using it
-    const [response, rawResponse] = await this.p.client.completePrompt(
-      this.p.prompt,
-      defaultCompletion,
-      messages,
-    );
+    const [response, rawResponse] = await this.p.client.completePrompt(this.p.prompt, [messages], {
+      modelName: defaultCompletion,
+    });
 
     // This is where we either prompt the user or call the dispatcher for the
     // tools

@@ -4,6 +4,10 @@ import { defaultCompletion, ModelName, models } from './models';
 import type { Prompt } from '~/lib/prompts/base';
 import { writeFileSync } from 'fs';
 
+export type CompletePromptOptions = {
+  modelName?: ModelName;
+};
+
 export class LlmClient {
   defaultCompletion: ModelName = defaultCompletion;
 
@@ -35,9 +39,10 @@ export class LlmClient {
 
   async completePrompt<Args extends unknown[], ParseOutput>(
     prompt: Prompt<Args, any, any, ParseOutput, any>,
-    model: ModelName = this.defaultCompletion,
-    ...promptArgs: Args
+    promptArgs: Args,
+    options?: CompletePromptOptions,
   ): Promise<[ParseOutput, string]> {
+    const model = options?.modelName ?? this.defaultCompletion;
     const client = this._getClient(model);
 
     const promptRendered = prompt.renderPrompt(...promptArgs);
