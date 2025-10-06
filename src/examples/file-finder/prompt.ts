@@ -1,5 +1,4 @@
 import Type from 'typebox';
-import { OpenAiChatCompletionRole } from '~/lib/prompts/openai-types';
 import { defineTool, defineTools, PromptTools } from '~/lib/prompts/tools';
 import { DbMessage, dbMessageToOpenAi } from '~/lib/services/conversation-db/base';
 import os from 'os';
@@ -43,7 +42,7 @@ const [tools, parser] = defineTools([
 
 export const PromptFileFinder = new PromptTools(tools, parser, (messages: DbMessage[]) => [
   {
-    role: 'system' as OpenAiChatCompletionRole,
+    role: 'system',
     content: `You are an agentic system for helping the user to find files or directories on their computer based on a conversation with them. Please try and minimize the amount of data you pull into your context. For any command you want to run, you should add a brief description of what you're doing, and why.
 
 ${JSON.stringify({

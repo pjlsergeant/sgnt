@@ -1,11 +1,39 @@
-import OpenAI from 'openai';
+import OpenAI, { APIPromise } from 'openai';
 
 import { defaultCompletion, ModelName, models } from './models';
+import type {
+  OpenAiChatCompletion,
+  OpenAiChatCompletionCreateParamsNonStreaming,
+} from '~/lib/prompts/openai-types';
 import type { Prompt } from '~/lib/prompts/base';
 import { writeFileSync } from 'fs';
+import cloneDeep from 'lodash-es/cloneDeep';
+
+type CompletionFn = (
+  client: OpenAI,
+  config: OpenAiChatCompletionCreateParamsNonStreaming,
+) => APIPromise<OpenAiChatCompletion>;
+
+type CompletionMiddleware = (
+  client: OpenAI,
+  config: OpenAiChatCompletionCreateParamsNonStreaming,
+  fn: CompletionFn,
+) => APIPromise<OpenAiChatCompletion>;
+
+function middlewareReducer(
+  completionFn: CompletionFn,
+  middleware: CompletionMiddleware,
+): CompletionFn {
+  return (client: OpenAI, config: OpenAiChatCompletionCreateParamsNonStreaming) =>
+    middleware(client, config, completionFn);
+}
+
+const createCompletion: CompletionFn = (client, config) =>
+  client.chat.completions.create(config) as unknown as APIPromise<OpenAiChatCompletion>;
 
 export type CompletePromptOptions = {
   modelName?: ModelName;
+  middleware?: CompletionMiddleware[];
 };
 
 export class LlmClient {
@@ -43,6 +71,7 @@ export class LlmClient {
     options?: CompletePromptOptions,
   ): Promise<[ParseOutput, string]> {
     const model = options?.modelName ?? this.defaultCompletion;
+    const middleware = options?.middleware ?? [];
     const client = this._getClient(model);
 
     const promptRendered = prompt.renderPrompt(...promptArgs);
@@ -55,23 +84,25 @@ export class LlmClient {
 
     writeFileSync('/tmp/messages.json', JSON.stringify(messagePayload, undefined, 2));
 
-    const fn = () => {
-      const config = {
-        messages: messagePayload,
-        model,
-        ...structureArgs,
-        ...('providers' in models[model]
-          ? {
-              provider: {
-                only: models[model].providers,
-                sort: 'throughput',
-              },
-            }
-          : {}),
-      } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
-
-      return client.chat.completions.create(config);
+    const config: OpenAiChatCompletionCreateParamsNonStreaming = {
+      messages: messagePayload,
+      model,
+      ...structureArgs,
+      ...('providers' in models[model]
+        ? {
+            provider: {
+              only: models[model].providers,
+              sort: 'throughput',
+            },
+          }
+        : {}),
     };
+
+    let fn: CompletionFn = createCompletion;
+
+    for (const middlewareFn of middleware) {
+      fn = middlewareReducer(fn, middlewareFn);
+    }
 
     const attempts = [
       ['initial attempt', 'debug', false],
@@ -82,7 +113,7 @@ export class LlmClient {
       const [label, logLevel, fatal] = attempt;
 
       try {
-        const wholeClientResponse = await fn();
+        const wholeClientResponse = await fn(client, cloneDeep(config));
         const relevantClientResponse = prompt.extract(wholeClientResponse);
         const payload = prompt.parse(relevantClientResponse);
 

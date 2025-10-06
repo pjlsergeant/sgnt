@@ -30,6 +30,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@types/express": "^5.0.3",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.0.3",
     "@types/prompt-sync": "^4.2.3",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
@@ -50,6 +51,7 @@
   },
   "dependencies": {
     "execa": "^9.6.0",
+    "lodash-es": "^4.17.21",
     "openai": "^5.22.0",
     "prompt-sync": "^4.2.0",
     "typebox": "^1.0.8"

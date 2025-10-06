@@ -14,9 +14,9 @@ export interface OpenAiChatCompletionToolCall {
 }
 
 export interface OpenAiChatCompletionMessage {
-  role: OpenAiChatCompletionRole;
-  content?: string;
-  refusal?: string;
+  role: 'assistant';
+  content?: string | null;
+  refusal?: string | null;
   tool_calls?: OpenAiChatCompletionToolCall[];
   [key: string]: unknown;
 }
@@ -24,7 +24,7 @@ export interface OpenAiChatCompletionMessage {
 export interface OpenAiChatCompletionChoice {
   index: number;
   message: OpenAiChatCompletionMessage;
-  finish_reason?: string;
+  finish_reason?: string | null;
   [key: string]: unknown;
 }
 
@@ -44,12 +44,41 @@ export interface OpenAiChatCompletion {
   [key: string]: unknown;
 }
 
-export interface OpenAiChatCompletionMessageParam {
-  role: OpenAiChatCompletionRole;
+export interface OpenAiChatCompletionSystemMessageParam {
+  role: 'system';
   content: string;
   name?: string;
   [key: string]: unknown;
 }
+
+export interface OpenAiChatCompletionUserMessageParam {
+  role: 'user';
+  content: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export interface OpenAiChatCompletionAssistantMessageParam {
+  role: 'assistant';
+  content?: string | null;
+  refusal?: string | null;
+  tool_calls?: OpenAiChatCompletionToolCall[];
+  [key: string]: unknown;
+}
+
+export interface OpenAiChatCompletionToolMessageParam {
+  role: 'tool';
+  content: string;
+  tool_call_id: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export type OpenAiChatCompletionMessageParam =
+  | OpenAiChatCompletionSystemMessageParam
+  | OpenAiChatCompletionUserMessageParam
+  | OpenAiChatCompletionAssistantMessageParam
+  | OpenAiChatCompletionToolMessageParam;
 
 export interface OpenAiChatCompletionToolDefinition {
   type: 'function';
@@ -76,17 +105,22 @@ export type OpenAiChatCompletionToolChoice =
       [key: string]: unknown;
     };
 
-export interface OpenAiChatCompletionResponseFormat<Schema = unknown> {
+export interface OpenAiChatCompletionResponseFormat<
+  Schema extends Record<string, unknown> = Record<string, unknown>,
+> {
   type: 'json_schema';
   json_schema: {
     name: string;
     schema: Schema;
+    strict?: boolean | null;
     [key: string]: unknown;
   };
   [key: string]: unknown;
 }
 
-export interface OpenAiChatCompletionCreateParamsNonStreaming<Schema = unknown> {
+export interface OpenAiChatCompletionCreateParamsNonStreaming<
+  Schema extends Record<string, unknown> = Record<string, unknown>,
+> {
   model: string;
   messages: OpenAiChatCompletionMessageParam[];
   response_format?: OpenAiChatCompletionResponseFormat<Schema>;
