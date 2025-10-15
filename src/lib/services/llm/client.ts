@@ -8,32 +8,17 @@ import type {
 import type { Prompt } from '~/lib/prompts/base';
 import { writeFileSync } from 'fs';
 import cloneDeep from 'lodash-es/cloneDeep';
+import { CompletionFn, CompletionMiddleware, middlewareReducer } from '~/lib/middleware/base';
 
-type CompletionFn = (
+const createCompletion = <Args>(
   client: OpenAI,
   config: OpenAiChatCompletionCreateParamsNonStreaming,
-) => APIPromise<OpenAiChatCompletion>;
+  _args: Args,
+) => client.chat.completions.create(config) as unknown as APIPromise<OpenAiChatCompletion>;
 
-type CompletionMiddleware = (
-  client: OpenAI,
-  config: OpenAiChatCompletionCreateParamsNonStreaming,
-  fn: CompletionFn,
-) => APIPromise<OpenAiChatCompletion>;
-
-function middlewareReducer(
-  completionFn: CompletionFn,
-  middleware: CompletionMiddleware,
-): CompletionFn {
-  return (client: OpenAI, config: OpenAiChatCompletionCreateParamsNonStreaming) =>
-    middleware(client, config, completionFn);
-}
-
-const createCompletion: CompletionFn = (client, config) =>
-  client.chat.completions.create(config) as unknown as APIPromise<OpenAiChatCompletion>;
-
-export type CompletePromptOptions = {
+export type CompletePromptOptions<Args extends unknown[]> = {
   modelName?: ModelName;
-  middleware?: CompletionMiddleware[];
+  middleware?: CompletionMiddleware<Args>[];
 };
 
 export class LlmClient {
@@ -68,7 +53,7 @@ export class LlmClient {
   async completePrompt<Args extends unknown[], ParseOutput>(
     prompt: Prompt<Args, any, any, ParseOutput, any>,
     promptArgs: Args,
-    options?: CompletePromptOptions,
+    options?: CompletePromptOptions<Args>,
   ): Promise<[ParseOutput, string]> {
     const model = options?.modelName ?? this.defaultCompletion;
     const middleware = options?.middleware ?? [];
@@ -98,7 +83,7 @@ export class LlmClient {
         : {}),
     };
 
-    let fn: CompletionFn = createCompletion;
+    let fn: CompletionFn<Args> = createCompletion;
 
     for (const middlewareFn of middleware) {
       fn = middlewareReducer(fn, middlewareFn);
@@ -113,7 +98,7 @@ export class LlmClient {
       const [label, logLevel, fatal] = attempt;
 
       try {
-        const wholeClientResponse = await fn(client, cloneDeep(config));
+        const wholeClientResponse = await fn(client, cloneDeep(config), cloneDeep(promptArgs));
         const relevantClientResponse = prompt.extract(wholeClientResponse);
         const payload = prompt.parse(relevantClientResponse);
 

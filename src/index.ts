@@ -31,3 +31,5 @@ export type {
   UserId,
 } from '~/lib/services/conversation-db/base';
 export { ConversationDbInMemory } from '~/lib/services/conversation-db/in-memory';
+
+export { logToLangfuse } from '~/lib/middleware/langfuse';
