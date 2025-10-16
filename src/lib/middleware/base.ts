@@ -1,18 +1,14 @@
 import OpenAI, { APIPromise } from 'openai';
-import {
-  OpenAiChatCompletion,
-  OpenAiChatCompletionCreateParamsNonStreaming,
-} from '../prompts/openai-types.js';
 
-export type CompletionFn<Args, ReturnValue = APIPromise<OpenAiChatCompletion>> = (
+export type CompletionFn<Args, ReturnValue = APIPromise<OpenAI.Chat.ChatCompletion>> = (
   client: OpenAI,
-  config: OpenAiChatCompletionCreateParamsNonStreaming,
+  config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
   args: Args,
 ) => ReturnValue;
 
-export type CompletionMiddleware<Args, ReturnValue = APIPromise<OpenAiChatCompletion>> = (
+export type CompletionMiddleware<Args, ReturnValue = APIPromise<OpenAI.Chat.ChatCompletion>> = (
   client: OpenAI,
-  config: OpenAiChatCompletionCreateParamsNonStreaming,
+  config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
   promptArgs: Args,
   fn: CompletionFn<Args, ReturnValue>,
 ) => ReturnValue;
@@ -21,6 +17,6 @@ export function middlewareReducer<Args, ReturnValue>(
   completionFn: CompletionFn<Args, ReturnValue>,
   middleware: CompletionMiddleware<Args, ReturnValue>,
 ): CompletionFn<Args, ReturnValue> {
-  return (client: OpenAI, config: OpenAiChatCompletionCreateParamsNonStreaming, args: Args) =>
+  return (client: OpenAI, config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, args: Args) =>
     middleware(client, config, args, completionFn);
 }

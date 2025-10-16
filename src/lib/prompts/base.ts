@@ -1,7 +1,8 @@
-import type { OpenAiChatCompletionMessageParam } from './openai-types.js';
+import type OpenAI from 'openai';
 
-export type OpenAiMessages = OpenAiChatCompletionMessageParam[];
-export type RenderPromptFn<Args extends unknown[]> = (...args: Args) => string | OpenAiMessages;
+export type RenderPromptFn<Args extends unknown[]> = (
+  ...args: Args
+) => string | OpenAI.Chat.ChatCompletionMessageParam[];
 
 export interface Prompt<
   Args extends unknown[],

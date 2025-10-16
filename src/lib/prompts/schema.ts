@@ -1,6 +1,6 @@
 import { Static, TSchema } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
-import type { OpenAiChatCompletion } from './openai-types.js';
+import type OpenAI from 'openai';
 import { Prompt, RenderPromptFn } from './base.js';
 
 type PromptSchemaStructure<Schema extends TSchema> = {
@@ -19,7 +19,7 @@ export class PromptSchema<
   ParseInput = Static<Schema>,
   ParseOutput = Static<Schema>,
   SchemaDescription extends PromptSchemaStructure<Schema> = PromptSchemaStructure<Schema>,
-  ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
+  ClientResponse extends OpenAI.Chat.ChatCompletion = OpenAI.Chat.ChatCompletion,
 > implements Prompt<Args, ClientResponse, ParseInput, ParseOutput, SchemaDescription>
 {
   protected compiledParser: Validator<any, Schema>;

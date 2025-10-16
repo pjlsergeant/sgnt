@@ -1,4 +1,4 @@
-import { OpenAiMessages } from '../../prompts/base.js';
+import type OpenAI from 'openai';
 
 export type MessageId = number;
 export type ConversationId = string;
@@ -15,7 +15,7 @@ export type DbMessage = {
 };
 
 const dbFromToRole = { user: 'user', bot: 'assistant', tool: 'tool' } as const;
-export function dbMessageToOpenAi(msgs: DbMessage[]): OpenAiMessages {
+export function dbMessageToOpenAi(msgs: DbMessage[]): OpenAI.Chat.ChatCompletionMessageParam[] {
   return msgs.map((m) => {
     if (m.from === 'tool') {
       return {

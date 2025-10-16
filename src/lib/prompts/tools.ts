@@ -1,10 +1,7 @@
 import Type, { Static } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
 import { TLocalizedValidationError } from 'typebox/error';
-import type {
-  OpenAiChatCompletion,
-  OpenAiChatCompletionCreateParamsNonStreaming,
-} from './openai-types.js';
+import type OpenAI from 'openai';
 import { Prompt, RenderPromptFn } from './base.js';
 
 //
@@ -65,7 +62,7 @@ const toolCallWiresC = Compile(Type.Array(toolCallWire));
 export type ToolCallWire = Static<typeof toolCallWire>;
 
 type PromptToolsStructure<Tools extends ToolDefinitions> = {
-  tool_choice?: OpenAiChatCompletionCreateParamsNonStreaming['tool_choice'];
+  tool_choice?: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming['tool_choice'];
   tools: {
     type: 'function';
     function: {
@@ -137,7 +134,7 @@ export class PromptTools<
   ParseOutput extends ToolResponses<Tools>,
   Tools extends ToolDefinitions,
   ToolDescription extends PromptToolsStructure<Tools>,
-  ClientResponse extends OpenAiChatCompletion = OpenAiChatCompletion,
+  ClientResponse extends OpenAI.Chat.ChatCompletion = OpenAI.Chat.ChatCompletion,
 > implements
     Prompt<Args, ClientResponse, ParseInput | string, ParseOutput | string, ToolDescription>
 {
@@ -147,7 +144,7 @@ export class PromptTools<
     public tools: Tools,
     public parser: (input: ParseInput) => ParseOutput,
     public renderPrompt: RenderPromptFn<Args>,
-    public toolChoice?: OpenAiChatCompletionCreateParamsNonStreaming['tool_choice'],
+    public toolChoice?: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming['tool_choice'],
   ) {
     // this.compiledParser = Compile(outputSchema);
   }

@@ -1,10 +1,5 @@
 import OpenAI, { APIPromise } from 'openai';
-
 import { defaultCompletion, ModelName, models } from './models.js';
-import type {
-  OpenAiChatCompletion,
-  OpenAiChatCompletionCreateParamsNonStreaming,
-} from '../../prompts/openai-types.js';
 import type { Prompt } from '../../prompts/base.js';
 import { writeFileSync } from 'fs';
 import cloneDeep from 'lodash-es/cloneDeep.js';
@@ -12,9 +7,9 @@ import { CompletionFn, CompletionMiddleware, middlewareReducer } from '../../mid
 
 const createCompletion = <Args>(
   client: OpenAI,
-  config: OpenAiChatCompletionCreateParamsNonStreaming,
+  config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
   _args: Args,
-) => client.chat.completions.create(config) as unknown as APIPromise<OpenAiChatCompletion>;
+) => client.chat.completions.create(config) as unknown as APIPromise<OpenAI.Chat.ChatCompletion>;
 
 export type CompletePromptOptions<Args extends unknown[]> = {
   modelName?: ModelName;
@@ -62,14 +57,16 @@ export class LlmClient {
     const promptRendered = prompt.renderPrompt(...promptArgs);
     const messagePayload = Array.isArray(promptRendered)
       ? promptRendered
-      : [{ role: 'system', content: promptRendered }];
-    const promptSample = messagePayload.at(-1)?.content?.substring(0, 255) ?? '[empty prompt?]';
+      : [{ role: 'system' as const, content: promptRendered }];
+    const lastContent = messagePayload.at(-1)?.content;
+    const promptSample =
+      typeof lastContent === 'string' ? lastContent.substring(0, 255) : '[empty prompt?]';
 
     const structureArgs = prompt.describeStructure();
 
     writeFileSync('/tmp/messages.json', JSON.stringify(messagePayload, undefined, 2));
 
-    const config: OpenAiChatCompletionCreateParamsNonStreaming = {
+    const config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       messages: messagePayload,
       model,
       ...structureArgs,
@@ -102,7 +99,7 @@ export class LlmClient {
         const relevantClientResponse = prompt.extract(wholeClientResponse);
         const payload = prompt.parse(relevantClientResponse);
 
-        console.dir({ payload }, { depth: null });
+        // console.dir({ payload }, { depth: null });
         return [payload, JSON.stringify(relevantClientResponse, undefined, 2)];
       } catch (error) {
         console[logLevel === 'debug' ? 'log' : 'error'](`Error during generation ${label}`, {

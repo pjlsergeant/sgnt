@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type OpenAI from 'openai';
-import type { OpenAiChatCompletionCreateParamsNonStreaming } from '../prompts/openai-types.js';
 import { CompletionFn, CompletionMiddleware, middlewareReducer } from './base.js';
 
 describe('middlewareReducer', () => {
   it('nests middleware in registration order', async () => {
     const dummyClient = {} as OpenAI;
-    const dummyConfig: OpenAiChatCompletionCreateParamsNonStreaming = {
+    const dummyConfig: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       model: 'gpt-4o-mini',
       messages: [],
     };
