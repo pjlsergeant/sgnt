@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type OpenAI from 'openai';
-import type { OpenAiChatCompletionCreateParamsNonStreaming } from '~/lib/prompts/openai-types';
-import { CompletionFn, CompletionMiddleware, middlewareReducer } from '~/lib/middleware/base';
+import type { OpenAiChatCompletionCreateParamsNonStreaming } from '../prompts/openai-types.js';
+import { CompletionFn, CompletionMiddleware, middlewareReducer } from './base.js';
 
 describe('middlewareReducer', () => {
   it('nests middleware in registration order', async () => {

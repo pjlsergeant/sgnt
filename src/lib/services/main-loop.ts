@@ -1,8 +1,8 @@
 import { nextTick } from 'process';
-import { Prompt } from '~/lib/prompts/base';
-import { ConversationDb, ConversationId, DbMessage } from '~/lib/services/conversation-db/base';
-import { LlmClient } from '~/lib/services/llm/client';
-import { defaultCompletion } from '~/lib/services/llm/models';
+import { Prompt } from '../prompts/base.js';
+import { ConversationDb, ConversationId, DbMessage } from './conversation-db/base.js';
+import { LlmClient } from './llm/client.js';
+import { defaultCompletion } from './llm/models.js';
 
 export type DefaultDispatcherResponses = {
   name: string;

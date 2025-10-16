@@ -1,7 +1,7 @@
 import { Static, TSchema } from 'typebox';
 import { Compile, Validator } from 'typebox/compile';
-import type { OpenAiChatCompletion } from '~/lib/prompts/openai-types';
-import { Prompt, RenderPromptFn } from '~/lib/prompts/base';
+import type { OpenAiChatCompletion } from './openai-types.js';
+import { Prompt, RenderPromptFn } from './base.js';
 
 type PromptSchemaStructure<Schema extends TSchema> = {
   response_format: {

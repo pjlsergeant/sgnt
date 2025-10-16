@@ -1,14 +1,14 @@
 import OpenAI, { APIPromise } from 'openai';
 
-import { defaultCompletion, ModelName, models } from './models';
+import { defaultCompletion, ModelName, models } from './models.js';
 import type {
   OpenAiChatCompletion,
   OpenAiChatCompletionCreateParamsNonStreaming,
-} from '~/lib/prompts/openai-types';
-import type { Prompt } from '~/lib/prompts/base';
+} from '../../prompts/openai-types.js';
+import type { Prompt } from '../../prompts/base.js';
 import { writeFileSync } from 'fs';
-import cloneDeep from 'lodash-es/cloneDeep';
-import { CompletionFn, CompletionMiddleware, middlewareReducer } from '~/lib/middleware/base';
+import cloneDeep from 'lodash-es/cloneDeep.js';
+import { CompletionFn, CompletionMiddleware, middlewareReducer } from '../../middleware/base.js';
 
 const createCompletion = <Args>(
   client: OpenAI,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ConversationDb } from '~/lib/services/conversation-db/base';
-import { ConversationDbInMemory } from '~/lib/services/conversation-db/in-memory';
+import { ConversationDb } from './base.js';
+import { ConversationDbInMemory } from './in-memory.js';
 
 function conversationDbFromEnv() {
   return ConversationDbInMemory.fromEnv();

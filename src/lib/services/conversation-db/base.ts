@@ -1,4 +1,4 @@
-import { OpenAiMessages } from '~/lib/prompts/base';
+import { OpenAiMessages } from '../../prompts/base.js';
 
 export type MessageId = number;
 export type ConversationId = string;

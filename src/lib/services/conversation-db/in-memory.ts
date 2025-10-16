@@ -1,4 +1,4 @@
-import { ConversationDbBase, ConversationId, DbMessage, MessageId, UserId } from './base';
+import { ConversationDbBase, ConversationId, DbMessage, MessageId, UserId } from './base.js';
 
 type Metadata = Record<string, unknown> | null;
 

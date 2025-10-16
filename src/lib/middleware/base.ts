@@ -2,7 +2,7 @@ import OpenAI, { APIPromise } from 'openai';
 import {
   OpenAiChatCompletion,
   OpenAiChatCompletionCreateParamsNonStreaming,
-} from '~/lib/prompts/openai-types';
+} from '../prompts/openai-types.js';
 
 export type CompletionFn<Args, ReturnValue = APIPromise<OpenAiChatCompletion>> = (
   client: OpenAI,

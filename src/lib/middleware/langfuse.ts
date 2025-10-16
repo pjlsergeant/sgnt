@@ -1,7 +1,7 @@
 import { LangfuseConfig, LangfuseTraceClient, observeOpenAI } from 'langfuse';
 import OpenAI from 'openai';
-import { CompletionFn, CompletionMiddleware } from '~/lib/middleware/base';
-import { OpenAiChatCompletionCreateParamsNonStreaming } from '~/lib/prompts/openai-types';
+import { CompletionFn, CompletionMiddleware } from './base.js';
+import { OpenAiChatCompletionCreateParamsNonStreaming } from '../prompts/openai-types.js';
 
 export function logToLangfuse<X>(
   trace: LangfuseTraceClient,
