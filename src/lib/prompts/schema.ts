@@ -31,6 +31,13 @@ export class PromptSchema<
     this.compiledParser = Compile(outputSchema);
   }
 
+  // Preview the prompt
+  debugRender(args: Args) {
+    const rendered = this.renderPrompt(...args);
+    if (typeof rendered === 'string') return rendered;
+    return JSON.stringify(rendered);
+  }
+
   extract(response: ClientResponse): ParseInput {
     const message = response.choices[0]?.message;
     if (!message) throw new Error(`No choices returned`);

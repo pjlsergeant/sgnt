@@ -45,6 +45,7 @@
     "git-format-staged": "^3.1.1",
     "globals": "^16.2.0",
     "husky": "^9.1.7",
+    "langfuse": "^3.38.5",
     "openai": "^5.22.0",
     "prettier": "^3.5.3",
     "tsc-alias": "^1.8.16",
@@ -54,12 +55,12 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
+    "langfuse": "^3.32.0",
     "openai": "^5.0.0",
     "typebox": "^1.0.8"
   },
   "dependencies": {
     "execa": "^9.6.0",
-    "langfuse": "^3.38.5",
     "lodash-es": "^4.17.21",
     "prompt-sync": "^4.2.0"
   }

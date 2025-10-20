@@ -164,6 +164,13 @@ export class PromptTools<
     return toolCalls as ParseInput;
   }
 
+  // Preview the prompt
+  debugRender(args: Args) {
+    const rendered = this.renderPrompt(...args);
+    if (typeof rendered === 'string') return rendered;
+    return JSON.stringify(rendered);
+  }
+
   parse(input: ParseInput | string) {
     if (typeof input === 'string') return input as string;
     return this.parser(input);
