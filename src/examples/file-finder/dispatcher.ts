@@ -1,7 +1,8 @@
-import { PromptFileFinder } from '~/examples/file-finder/prompt';
-import { PromptOutput } from '~/lib/prompts/base';
-import { ConversationDb, DbMessage } from '~/lib/services/conversation-db/base';
-import { DefaultDispatcherResponses, MainLoop } from '~/lib/services/main-loop';
+import { PromptFileFinder } from './prompt.js';
+import { PromptOutput } from '../../lib/prompts/base.js';
+import { ConversationDb, DbMessage } from '../../lib/services/conversation-db/base.js';
+import { DefaultDispatcherResponses, MainLoop } from '../../lib/services/main-loop.js';
+import type { LlmConfig } from '../../lib/services/llm/models.js';
 import promptSync from 'prompt-sync';
 import { execa } from 'execa';
 
@@ -16,12 +17,12 @@ import { execa } from 'execa';
 //     Prompt<Args, ClientResponse, ParseInput | string, ParseOutput | string, ToolDescription>
 // {
 
-export function makeDispatcher<ParseOutput extends PromptOutput<typeof PromptFileFinder>>(
-  _db: ConversationDb,
-  prompt: promptSync.Prompt,
-) {
+export function makeDispatcher<
+  ParseOutput extends PromptOutput<typeof PromptFileFinder>,
+  Config extends LlmConfig = LlmConfig,
+>(_db: ConversationDb, prompt: promptSync.Prompt) {
   return async function dispatcher(
-    _loop: MainLoop<ParseOutput>,
+    _loop: MainLoop<ParseOutput, Config>,
     _messages: DbMessage[],
     toolCallsRequested: Exclude<ParseOutput, string>,
   ): Promise<DefaultDispatcherResponses> {

@@ -1,5 +1,6 @@
 import OpenAI, { APIPromise } from 'openai';
-import { defaultCompletion, ModelName, models } from './models.js';
+import type { LlmConfig, InferModelNames, InferServiceNames } from './models.js';
+import { llmConfig, defaultCompletion } from './models.js';
 import type { Prompt } from '../../prompts/base.js';
 import { writeFileSync } from 'fs';
 import cloneDeep from 'lodash-es/cloneDeep.js';
@@ -11,44 +12,56 @@ const createCompletion = <Args>(
   _args: Args,
 ) => client.chat.completions.create(config) as unknown as APIPromise<OpenAI.Chat.ChatCompletion>;
 
-export type CompletePromptOptions<Args extends unknown[]> = {
-  modelName?: ModelName;
+export type CompletePromptOptions<Config extends LlmConfig, Args extends unknown[]> = {
+  modelName?: InferModelNames<Config>;
   middleware?: CompletionMiddleware<Args>[];
 };
 
-export class LlmClient {
-  defaultCompletion: ModelName = defaultCompletion;
-
-  _openAiClient: OpenAI | null = null;
-  _openRouterClient: OpenAI | null = null;
+export class LlmClient<Config extends LlmConfig> {
+  defaultCompletion: InferModelNames<Config>;
+  private _clients: Map<InferServiceNames<Config>, OpenAI> = new Map();
 
   constructor(
-    openAiApiKey = process.env['OPENAI_API_KEY'],
-    openRouterApiKey = process.env['OPENROUTER_API_KEY'],
+    private config: Config,
+    defaultCompletion?: InferModelNames<Config>,
   ) {
-    if (openAiApiKey) this._openAiClient = new OpenAI({ apiKey: openAiApiKey });
-    if (openRouterApiKey)
-      this._openRouterClient = new OpenAI({
-        apiKey: openRouterApiKey,
-        baseURL: 'https://openrouter.ai/api/v1',
-      });
+    this.defaultCompletion =
+      defaultCompletion ?? (Object.keys(config.models)[0] as InferModelNames<Config>);
   }
 
-  _getClient(model: ModelName) {
-    const service = models[model].service;
-    const baseClient: OpenAI | null =
-      service === 'openai' ? this._openAiClient : this._openRouterClient;
-    if (!baseClient) throw new Error('Couldnt load model ' + model);
+  private _getClient(model: InferModelNames<Config>): OpenAI {
+    const modelDef = this.config.models[model];
+    if (!modelDef) {
+      throw new Error(`Model '${String(model)}' not found in config`);
+    }
 
-    // Add any observers here
-    const client = baseClient;
+    const serviceName = modelDef.service as InferServiceNames<Config>;
+
+    // Check if client already exists
+    if (this._clients.has(serviceName)) {
+      return this._clients.get(serviceName)!;
+    }
+
+    // Initialize client lazily
+    const serviceDef = this.config.services[serviceName];
+    if (!serviceDef) {
+      throw new Error(`Service '${String(serviceName)}' not found in config`);
+    }
+
+    const client = new OpenAI(serviceDef.options);
+
+    // Cache unless lazyInitClient is explicitly false
+    if (serviceDef.lazyInitClient !== false) {
+      this._clients.set(serviceName, client);
+    }
+
     return client;
   }
 
   async completePrompt<Args extends unknown[], ParseOutput>(
     prompt: Prompt<Args, any, any, ParseOutput, any>,
     promptArgs: Args,
-    options?: CompletePromptOptions<Args>,
+    options?: CompletePromptOptions<Config, Args>,
   ): Promise<[ParseOutput, string]> {
     const model = options?.modelName ?? this.defaultCompletion;
     const middleware = options?.middleware ?? [];
@@ -66,18 +79,16 @@ export class LlmClient {
 
     writeFileSync('/tmp/messages.json', JSON.stringify(messagePayload, undefined, 2));
 
+    const modelDef = this.config.models[model];
+    if (!modelDef) {
+      throw new Error(`Model '${String(model)}' not found in config`);
+    }
+
     const config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       messages: messagePayload,
-      model,
+      model: model as string,
       ...structureArgs,
-      ...('providers' in models[model]
-        ? {
-            provider: {
-              only: models[model].providers,
-              sort: 'throughput',
-            },
-          }
-        : {}),
+      ...(modelDef.extras ?? {}),
     };
 
     let fn: CompletionFn<Args> = createCompletion;
@@ -115,3 +126,6 @@ export class LlmClient {
     throw new Error("Final attempt is fatal so can't get here");
   }
 }
+
+// Default instance using the standard config
+export const defaultLlmClient = new LlmClient(llmConfig, defaultCompletion);

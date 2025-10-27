@@ -1,6 +1,6 @@
 import Type from 'typebox';
-import { defineTool, defineTools, PromptTools } from '~/lib/prompts/tools';
-import { DbMessage, dbMessageToOpenAi } from '~/lib/services/conversation-db/base';
+import { defineTool, defineTools, PromptTools } from '../../lib/prompts/tools.js';
+import { DbMessage, dbMessageToOpenAi } from '../../lib/services/conversation-db/base.js';
 import os from 'os';
 
 const [tools, parser] = defineTools([

@@ -9,9 +9,22 @@ export type {
   ToolCallWire,
 } from './lib/prompts/tools.js';
 
-export { LlmClient } from './lib/services/llm/client.js';
-export { models, defaultCompletion } from './lib/services/llm/models.js';
-export type { LlmService, ModelName, ModelDefinition } from './lib/services/llm/models.js';
+export { LlmClient, defaultLlmClient } from './lib/services/llm/client.js';
+export type { CompletePromptOptions } from './lib/services/llm/client.js';
+export { llmConfig, defaultCompletion, defineLlmModelSet } from './lib/services/llm/models.js';
+export type {
+  LlmConfig,
+  LlmService,
+  LlmModel,
+  InferServiceNames,
+  InferModelNames,
+  InferServices,
+  InferModels,
+  ServiceName,
+  ModelName,
+  Services,
+  Models,
+} from './lib/services/llm/models.js';
 
 export { MainLoop } from './lib/services/main-loop.js';
 

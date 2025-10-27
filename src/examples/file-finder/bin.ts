@@ -1,21 +1,21 @@
-import { LlmClient } from '~/lib/services/llm/client';
+import { defaultLlmClient } from '../../lib/services/llm/client.js';
 import promptSync from 'prompt-sync';
-import { ConversationDbInMemory } from '~/lib/services/conversation-db/in-memory';
-import { MainLoop } from '~/lib/services/main-loop';
-import { makeDispatcher } from '~/examples/file-finder/dispatcher';
-import { PromptFileFinder } from '~/examples/file-finder/prompt';
+import { ConversationDbInMemory } from '../../lib/services/conversation-db/in-memory.js';
+import { MainLoop } from '../../lib/services/main-loop.js';
+import { makeDispatcher } from './dispatcher.js';
+import { PromptFileFinder } from './prompt.js';
 
 async function main() {
   const db = new ConversationDbInMemory();
-  const client = new LlmClient();
+  const client = defaultLlmClient;
   const userPrompt = promptSync();
 
   const loop = new MainLoop({
     conversationDb: db,
     client,
-    prompt: PromptFileFinder as any,
+    prompt: PromptFileFinder,
     askUser: async (msg: string) => userPrompt(msg + '\n> '),
-    dispatcher: makeDispatcher(db, userPrompt) as any,
+    dispatcher: makeDispatcher(db, userPrompt),
   });
 
   const conversationId = await db.createConversation(1);

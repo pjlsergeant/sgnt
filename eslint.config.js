@@ -25,6 +25,7 @@ export default [
       '*.min.js',
       'eslint.config.js',
       'vitest.config.ts',
+      'src/examples/',
     ],
   },
   ...compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'),
