@@ -13,9 +13,25 @@
     "check": "tsc --noEmit && npm run test && npm run lint && npm run format",
     "prepare": "npm run build && husky"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "llm",
+    "ai",
+    "typescript",
+    "openai",
+    "langfuse",
+    "agent",
+    "building-blocks"
+  ],
+  "author": "Pete Sergeant",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pjlsergeant/sgnt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pjlsergeant/sgnt/issues"
+  },
+  "homepage": "https://github.com/pjlsergeant/sgnt#readme",
   "files": [
     "dist"
   ],
