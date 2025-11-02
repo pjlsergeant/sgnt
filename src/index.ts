@@ -10,7 +10,7 @@ export type {
 } from './lib/prompts/tools.js';
 
 export { LlmClient, defaultLlmClient } from './lib/services/llm/client.js';
-export type { CompletePromptOptions } from './lib/services/llm/client.js';
+export type { CompletePromptOptions, GenerateEmbeddingOptions } from './lib/services/llm/client.js';
 export { llmConfig, defaultCompletion, defineLlmModelSet } from './lib/services/llm/models.js';
 export type {
   LlmConfig,
@@ -38,4 +38,12 @@ export type {
 } from './lib/services/conversation-db/base.js';
 export { ConversationDbInMemory } from './lib/services/conversation-db/in-memory.js';
 
-export { logToLangfuse } from './lib/middleware/langfuse.js';
+export type {
+  CompletionFn,
+  CompletionMiddleware,
+  EmbeddingFn,
+  EmbeddingMiddleware,
+} from './lib/middleware/base.js';
+export { middlewareReducer, embeddingReducer } from './lib/middleware/base.js';
+
+export { logToLangfuse, logEmbeddingsToLangfuse } from './lib/middleware/langfuse.js';

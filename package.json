@@ -1,6 +1,6 @@
 {
   "name": "sgnt",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simple TypeScript building blocks for LLM-based apps",
   "private": false,
   "type": "module",
