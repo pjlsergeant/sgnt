@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions } from 'openai';
+import { ClientOptions } from 'openai';
 
 // Base types for defining services and models
 export type LlmService = {
@@ -8,8 +8,9 @@ export type LlmService = {
 
 export type LlmModel<ServiceNames extends string> = {
   service: ServiceNames;
+  type: 'completion' | 'embedding';
   costs?: { input: number; cached_input: number; output: number };
-  extras?: Partial<OpenAI.Chat.ChatCompletionCreateParamsNonStreaming>;
+  extras?: Record<string, any>;
 };
 
 // The shape of a complete LLM configuration
@@ -41,6 +42,21 @@ export type InferServices<T> = T extends { services: infer S } ? S : never;
 
 export type InferModels<T> = T extends { models: infer M } ? M : never;
 
+// Filter model names by type
+export type InferCompletionModelNames<T> = T extends { models: infer M }
+  ? {
+      [K in keyof M]: M[K] extends { type: 'completion' } ? K : never;
+    }[keyof M] &
+      string
+  : never;
+
+export type InferEmbeddingModelNames<T> = T extends { models: infer M }
+  ? {
+      [K in keyof M]: M[K] extends { type: 'embedding' } ? K : never;
+    }[keyof M] &
+      string
+  : never;
+
 // Example usage:
 export const llmConfig = defineLlmModelSet({
   services: {
@@ -60,6 +76,7 @@ export const llmConfig = defineLlmModelSet({
     // OpenAI - Standard models
     'gpt-4o-mini': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 0.15 / 1000000,
         cached_input: 0.075 / 1000000,
@@ -68,6 +85,7 @@ export const llmConfig = defineLlmModelSet({
     },
     'gpt-5-mini': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 0.25 / 1_000_000,
         cached_input: 0.03 / 1_000_000,
@@ -76,6 +94,7 @@ export const llmConfig = defineLlmModelSet({
     },
     'gpt-5-nano': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 0.05 / 1_000_000,
         cached_input: 0.005 / 1_000_000,
@@ -85,6 +104,7 @@ export const llmConfig = defineLlmModelSet({
     // Reasoning
     'o3-mini': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 1.1 / 1000000,
         cached_input: 0.55 / 1000000,
@@ -93,6 +113,7 @@ export const llmConfig = defineLlmModelSet({
     },
     'o4-mini': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 1.1 / 1000000,
         cached_input: 0.275 / 1000000,
@@ -101,6 +122,7 @@ export const llmConfig = defineLlmModelSet({
     },
     'gpt-4.1-nano': {
       service: 'openai',
+      type: 'completion',
       costs: {
         input: 0.1 / 1000000,
         cached_input: 0.025 / 1000000,
@@ -110,6 +132,7 @@ export const llmConfig = defineLlmModelSet({
     // Embeddings - only charged for input
     'text-embedding-3-large': {
       service: 'openai',
+      type: 'embedding',
       costs: {
         input: 0.13 / 1000000,
         cached_input: NaN,
@@ -122,10 +145,14 @@ export const llmConfig = defineLlmModelSet({
     // see: https://openrouter.ai/openai/gpt-oss-120b?sort=throughput
     'gpt-oss-120b': {
       service: 'openRouter',
+      type: 'completion',
       costs: {
         input: 0.15 / 1000000,
         cached_input: 0.075 / 1000000, // this isn't real via openrouter
         output: 0.6 / 1000000,
+      },
+      extras: {
+        providers: ['cerebras', 'groq'],
       },
     },
   },

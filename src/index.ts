@@ -18,6 +18,8 @@ export type {
   LlmModel,
   InferServiceNames,
   InferModelNames,
+  InferCompletionModelNames,
+  InferEmbeddingModelNames,
   InferServices,
   InferModels,
   ServiceName,

@@ -11,8 +11,14 @@ export const testConfig = {
     },
   },
   models: {
-    'test-model': {
+    'test-completion-model': {
       service: 'testService',
+      type: 'completion',
+      costs: { input: 0, cached_input: 0, output: 0 },
+    },
+    'test-embedding-model': {
+      service: 'testService',
+      type: 'embedding',
       costs: { input: 0, cached_input: 0, output: 0 },
     },
   },

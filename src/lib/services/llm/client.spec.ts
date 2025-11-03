@@ -6,7 +6,7 @@ import type OpenAI from 'openai';
 
 describe('LlmClient', () => {
   it('completes a prompt successfully', async () => {
-    const client = new TestLlmClient(testConfig, 'test-model');
+    const client = new TestLlmClient(testConfig, 'test-completion-model');
 
     const mockCreate = vi.fn().mockResolvedValue({
       choices: [{ message: { content: 'Hello!' } }],
@@ -24,7 +24,7 @@ describe('LlmClient', () => {
   });
 
   it('retries on failure and succeeds', async () => {
-    const client = new TestLlmClient(testConfig, 'test-model');
+    const client = new TestLlmClient(testConfig, 'test-completion-model');
 
     const mockCreate = vi
       .fn()
@@ -49,7 +49,7 @@ describe('LlmClient', () => {
   });
 
   it('throws error after all retries fail', async () => {
-    const client = new TestLlmClient(testConfig, 'test-model');
+    const client = new TestLlmClient(testConfig, 'test-completion-model');
 
     const mockCreate = vi.fn().mockRejectedValue(new Error('Persistent API error'));
 
@@ -71,7 +71,7 @@ describe('LlmClient', () => {
   });
 
   it('generates an embedding successfully', async () => {
-    const client = new TestLlmClient(testConfig, 'test-model');
+    const client = new TestLlmClient(testConfig, 'test-embedding-model');
 
     const mockCreate = vi.fn().mockResolvedValue({
       data: [{ embedding: [0.1, 0.2, 0.3] }],
@@ -86,7 +86,7 @@ describe('LlmClient', () => {
     expect(embedding).toEqual([0.1, 0.2, 0.3]);
     expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(mockCreate).toHaveBeenCalledWith({
-      model: 'test-model',
+      model: 'test-embedding-model',
       input: 'Test text',
     });
   });
@@ -94,7 +94,7 @@ describe('LlmClient', () => {
   it('applies middleware to embeddings', async () => {
     const dummyClient = {} as OpenAI;
     const dummyConfig: OpenAI.Embeddings.EmbeddingCreateParams = {
-      model: 'test-model',
+      model: 'test-embedding-model',
       input: 'test',
     };
     const dummyArgs: readonly [string] = ['test'];

@@ -1,5 +1,11 @@
 import OpenAI, { APIPromise } from 'openai';
-import type { LlmConfig, InferModelNames, InferServiceNames } from './models.js';
+import type {
+  LlmConfig,
+  InferModelNames,
+  InferServiceNames,
+  InferCompletionModelNames,
+  InferEmbeddingModelNames,
+} from './models.js';
 import { llmConfig, defaultCompletion } from './models.js';
 import type { Prompt } from '../../prompts/base.js';
 import { writeFileSync } from 'fs';
@@ -29,12 +35,12 @@ const createEmbedding = <Args>(
   ) as unknown as APIPromise<OpenAI.Embeddings.CreateEmbeddingResponse>;
 
 export type CompletePromptOptions<Config extends LlmConfig, Args extends unknown[]> = {
-  modelName?: InferModelNames<Config>;
+  modelName?: InferCompletionModelNames<Config>;
   middleware?: CompletionMiddleware<Args>[];
 };
 
 export type GenerateEmbeddingOptions<Config extends LlmConfig, Args> = {
-  modelName?: InferModelNames<Config>;
+  modelName?: InferEmbeddingModelNames<Config>;
   middleware?: EmbeddingMiddleware<Args>[];
 };
 
