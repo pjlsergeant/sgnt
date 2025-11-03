@@ -9,6 +9,7 @@ export type LlmService = {
 export type LlmModel<ServiceNames extends string> = {
   service: ServiceNames;
   type: 'completion' | 'embedding';
+  serviceName?: string;
   costs?: { input: number; cached_input: number; output: number };
   extras?: Record<string, any>;
 };

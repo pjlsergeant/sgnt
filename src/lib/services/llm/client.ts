@@ -141,7 +141,7 @@ export class LlmClient<Config extends LlmConfig> {
 
     const config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       messages: messagePayload,
-      model: model as string,
+      model: modelDef.serviceName ?? (model as string),
       ...structureArgs,
       ...(modelDef.extras ?? {}),
     };
@@ -187,7 +187,7 @@ export class LlmClient<Config extends LlmConfig> {
     }
 
     const config: OpenAI.Embeddings.EmbeddingCreateParams = {
-      model: model as string,
+      model: modelDef.serviceName ?? (model as string),
       input,
       ...(modelDef.extras ?? {}),
     };
