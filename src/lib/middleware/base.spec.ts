@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type OpenAI from 'openai';
 import { CompletionFn, CompletionMiddleware, middlewareReducer } from './base.js';
+import { noopLogger } from '../logger.js';
 
 describe('middlewareReducer', () => {
   it('nests middleware in registration order', async () => {
@@ -22,9 +23,9 @@ describe('middlewareReducer', () => {
     const firstMiddleware: CompletionMiddleware<
       typeof dummyArgs,
       Promise<Record<string, unknown>>
-    > = async (client, config, args, next) => {
+    > = async (client, config, args, next, logger) => {
       events.push('mw1-before');
-      const result = await next(client, config, args);
+      const result = await next(client, config, args, logger);
       events.push('mw1-after');
       return result;
     };
@@ -32,9 +33,9 @@ describe('middlewareReducer', () => {
     const secondMiddleware: CompletionMiddleware<
       typeof dummyArgs,
       Promise<Record<string, unknown>>
-    > = async (client, config, args, next) => {
+    > = async (client, config, args, next, logger) => {
       events.push('mw2-before');
-      const result = await next(client, config, args);
+      const result = await next(client, config, args, logger);
       events.push('mw2-after');
       return result;
     };
@@ -43,7 +44,7 @@ describe('middlewareReducer', () => {
     composed = middlewareReducer(composed, firstMiddleware);
     composed = middlewareReducer(composed, secondMiddleware);
 
-    await composed(dummyClient, dummyConfig, dummyArgs);
+    await composed(dummyClient, dummyConfig, dummyArgs, noopLogger);
 
     expect(events).toEqual(['mw2-before', 'mw1-before', 'base', 'mw1-after', 'mw2-after']);
   });

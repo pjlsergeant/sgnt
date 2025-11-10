@@ -3,6 +3,7 @@ import { TestLlmClient, TestPrompt, testConfig } from './client.test-utils.js';
 import type { EmbeddingFn, EmbeddingMiddleware } from '../../middleware/base.js';
 import { embeddingReducer } from '../../middleware/base.js';
 import type OpenAI from 'openai';
+import { noopLogger } from '../../logger.js';
 
 describe('LlmClient', () => {
   it('completes a prompt successfully', async () => {
@@ -37,15 +38,11 @@ describe('LlmClient', () => {
       chat: { completions: { create: mockCreate } },
     } as any;
 
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
     const prompt = new TestPrompt();
     const [result] = await client.completePrompt(prompt, ['Hi']);
 
     expect(result).toBe('Success!');
     expect(mockCreate).toHaveBeenCalledTimes(2);
-
-    consoleLogSpy.mockRestore();
   });
 
   it('throws error after all retries fail', async () => {
@@ -57,17 +54,29 @@ describe('LlmClient', () => {
       chat: { completions: { create: mockCreate } },
     } as any;
 
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
     const prompt = new TestPrompt();
 
     await expect(client.completePrompt(prompt, ['Hi'])).rejects.toThrow('Persistent API error');
 
-    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+  });
 
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
+  it('respects custom maxAttempts', async () => {
+    const client = new TestLlmClient(testConfig, 'test-completion-model');
+
+    const mockCreate = vi.fn().mockRejectedValue(new Error('API error'));
+
+    client.mockClient = {
+      chat: { completions: { create: mockCreate } },
+    } as any;
+
+    const prompt = new TestPrompt();
+
+    await expect(client.completePrompt(prompt, ['Hi'], { maxAttempts: 5 })).rejects.toThrow(
+      'API error',
+    );
+
+    expect(mockCreate).toHaveBeenCalledTimes(5);
   });
 
   it('generates an embedding successfully', async () => {
@@ -110,9 +119,9 @@ describe('LlmClient', () => {
     const middleware1: EmbeddingMiddleware<
       typeof dummyArgs,
       Promise<Record<string, unknown>>
-    > = async (client, config, args, next) => {
+    > = async (client, config, args, next, logger) => {
       events.push('mw1-before');
-      const result = await next(client, config, args);
+      const result = await next(client, config, args, logger);
       events.push('mw1-after');
       return result;
     };
@@ -120,9 +129,9 @@ describe('LlmClient', () => {
     const middleware2: EmbeddingMiddleware<
       typeof dummyArgs,
       Promise<Record<string, unknown>>
-    > = async (client, config, args, next) => {
+    > = async (client, config, args, next, logger) => {
       events.push('mw2-before');
-      const result = await next(client, config, args);
+      const result = await next(client, config, args, logger);
       events.push('mw2-after');
       return result;
     };
@@ -131,7 +140,7 @@ describe('LlmClient', () => {
     composed = embeddingReducer(composed, middleware1);
     composed = embeddingReducer(composed, middleware2);
 
-    await composed(dummyClient, dummyConfig, dummyArgs);
+    await composed(dummyClient, dummyConfig, dummyArgs, noopLogger);
 
     expect(events).toEqual(['mw2-before', 'mw1-before', 'base', 'mw1-after', 'mw2-after']);
   });

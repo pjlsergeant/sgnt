@@ -18,17 +18,20 @@ import {
   EmbeddingMiddleware,
   embeddingReducer,
 } from '../../middleware/base.js';
+import { Logger, noopLogger } from '../../logger.js';
 
 const createCompletion = <Args>(
   client: OpenAI,
   config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
   _args: Args,
+  _logger: Logger,
 ) => client.chat.completions.create(config) as unknown as APIPromise<OpenAI.Chat.ChatCompletion>;
 
 const createEmbedding = <Args>(
   client: OpenAI,
   config: OpenAI.Embeddings.EmbeddingCreateParams,
   _args: Args,
+  _logger: Logger,
 ) =>
   client.embeddings.create(
     config,
@@ -37,23 +40,31 @@ const createEmbedding = <Args>(
 export type CompletePromptOptions<Config extends LlmConfig, Args extends unknown[]> = {
   modelName?: InferCompletionModelNames<Config>;
   middleware?: CompletionMiddleware<Args>[];
+  maxAttempts?: number;
 };
 
 export type GenerateEmbeddingOptions<Config extends LlmConfig, Args> = {
   modelName?: InferEmbeddingModelNames<Config>;
   middleware?: EmbeddingMiddleware<Args>[];
+  maxAttempts?: number;
 };
 
 export class LlmClient<Config extends LlmConfig> {
   defaultCompletion: InferModelNames<Config>;
+  logger: Logger;
+  maxAttempts: number;
   private _clients: Map<InferServiceNames<Config>, OpenAI> = new Map();
 
   constructor(
     private config: Config,
     defaultCompletion?: InferModelNames<Config>,
+    logger?: Logger,
+    maxAttempts: number = 3,
   ) {
     this.defaultCompletion =
       defaultCompletion ?? (Object.keys(config.models)[0] as InferModelNames<Config>);
+    this.logger = logger ?? noopLogger;
+    this.maxAttempts = maxAttempts;
   }
 
   protected _getClient(model: InferModelNames<Config>): OpenAI {
@@ -87,30 +98,35 @@ export class LlmClient<Config extends LlmConfig> {
 
   private async _withRetry<T>(
     operation: () => Promise<T>,
-    context: { model: string; operationSample: string },
+    context: { model: string; operationSample: string; maxAttempts: number },
   ): Promise<T> {
-    const attempts = [
-      ['initial attempt', 'debug', false],
-      ['retry', 'warn', true],
-    ] as const;
+    let lastError: unknown;
 
-    for (const attempt of attempts) {
-      const [label, logLevel, fatal] = attempt;
+    for (let attemptNum = 1; attemptNum <= context.maxAttempts; attemptNum++) {
+      const isFirstAttempt = attemptNum === 1;
+      const isFinalAttempt = attemptNum === context.maxAttempts;
+      const label = isFirstAttempt ? 'initial attempt' : `retry ${attemptNum - 1}`;
+
+      // 1st: debug, intermediate: warn, final: error
+      const logLevel = isFirstAttempt ? 'debug' : isFinalAttempt ? 'error' : 'warn';
 
       try {
         return await operation();
       } catch (error) {
-        console[logLevel === 'debug' ? 'log' : 'error'](`Error during generation ${label}`, {
+        lastError = error;
+        this.logger[logLevel](`Error during generation ${label}`, {
           error,
           model: context.model,
           operationSample: context.operationSample,
+          attempt: attemptNum,
+          maxAttempts: context.maxAttempts,
         });
 
-        if (fatal) throw error;
+        if (isFinalAttempt) throw error;
       }
     }
 
-    throw new Error("Final attempt is fatal so can't get here");
+    throw lastError ?? new Error('No attempts were made');
   }
 
   async completePrompt<Args extends unknown[], ParseOutput>(
@@ -120,6 +136,7 @@ export class LlmClient<Config extends LlmConfig> {
   ): Promise<[ParseOutput, string]> {
     const model = options?.modelName ?? this.defaultCompletion;
     const middleware = options?.middleware ?? [];
+    const maxAttempts = options?.maxAttempts ?? this.maxAttempts;
     const client = this._getClient(model);
 
     const promptRendered = prompt.renderPrompt(...promptArgs);
@@ -154,7 +171,12 @@ export class LlmClient<Config extends LlmConfig> {
 
     return await this._withRetry(
       async () => {
-        const wholeClientResponse = await fn(client, cloneDeep(config), cloneDeep(promptArgs));
+        const wholeClientResponse = await fn(
+          client,
+          cloneDeep(config),
+          cloneDeep(promptArgs),
+          this.logger,
+        );
         const relevantClientResponse = prompt.extract(wholeClientResponse);
         const payload = prompt.parse(relevantClientResponse);
 
@@ -167,6 +189,7 @@ export class LlmClient<Config extends LlmConfig> {
       {
         model: model as string,
         operationSample: promptSample,
+        maxAttempts,
       },
     );
   }
@@ -177,6 +200,7 @@ export class LlmClient<Config extends LlmConfig> {
   ): Promise<[number[]]> {
     const model = options?.modelName ?? this.defaultCompletion;
     const middleware = options?.middleware ?? [];
+    const maxAttempts = options?.maxAttempts ?? this.maxAttempts;
     const client = this._getClient(model);
 
     const inputSample = input.substring(0, 255);
@@ -200,7 +224,7 @@ export class LlmClient<Config extends LlmConfig> {
 
     return await this._withRetry(
       async () => {
-        const response = await fn(client, cloneDeep(config), [input]);
+        const response = await fn(client, cloneDeep(config), [input], this.logger);
         const embeddingData = response.data[0];
         if (!embeddingData) {
           throw new Error('No embedding data returned from API');
@@ -210,6 +234,7 @@ export class LlmClient<Config extends LlmConfig> {
       {
         model: model as string,
         operationSample: inputSample,
+        maxAttempts,
       },
     );
   }

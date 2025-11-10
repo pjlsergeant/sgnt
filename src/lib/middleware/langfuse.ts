@@ -1,6 +1,7 @@
 import { LangfuseConfig, LangfuseTraceClient, observeOpenAI } from 'langfuse';
 import OpenAI from 'openai';
 import { CompletionFn, CompletionMiddleware, EmbeddingFn, EmbeddingMiddleware } from './base.js';
+import type { Logger } from '../logger.js';
 
 export function logToLangfuse<X>(
   trace: LangfuseTraceClient,
@@ -11,9 +12,10 @@ export function logToLangfuse<X>(
     config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
     promptArgs: X,
     fn: CompletionFn<X>,
+    logger: Logger,
   ) => {
     const wrappedClient = observeOpenAI(client, { parent: trace, ...traceConfig });
-    return fn(wrappedClient, config, promptArgs);
+    return fn(wrappedClient, config, promptArgs, logger);
   };
 }
 
@@ -26,8 +28,9 @@ export function logEmbeddingsToLangfuse<X>(
     config: OpenAI.Embeddings.EmbeddingCreateParams,
     embeddingArgs: X,
     fn: EmbeddingFn<X>,
+    logger: Logger,
   ) => {
     const wrappedClient = observeOpenAI(client, { parent: trace, ...traceConfig });
-    return fn(wrappedClient, config, embeddingArgs);
+    return fn(wrappedClient, config, embeddingArgs, logger);
   };
 }

@@ -9,6 +9,9 @@ export type {
   ToolCallWire,
 } from './lib/prompts/tools.js';
 
+export { noopLogger } from './lib/logger.js';
+export type { Logger } from './lib/logger.js';
+
 export { LlmClient, defaultLlmClient } from './lib/services/llm/client.js';
 export type { CompletePromptOptions, GenerateEmbeddingOptions } from './lib/services/llm/client.js';
 export { llmConfig, defaultCompletion, defineLlmModelSet } from './lib/services/llm/models.js';
