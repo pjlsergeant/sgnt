@@ -51,4 +51,13 @@ export type {
 } from './lib/middleware/base.js';
 export { middlewareReducer, embeddingReducer } from './lib/middleware/base.js';
 
-export { logToLangfuse, logEmbeddingsToLangfuse } from './lib/middleware/langfuse.js';
+export {
+  logToLangfuseCompletion,
+  logToLangfuseEmbedding,
+  observeOpenAIWithTrace,
+} from './lib/middleware/langfuse.js';
+export type { LogToLangfuseConfig } from './lib/middleware/langfuse.js';
+export { wrapPromiseCompletion, wrapPromiseEmbedding } from './lib/middleware/wrapPromise.js';
+
+export { endOpenTraces, LangfuseTraceHandle, startTrace } from './lib/langfuse.js';
+export type { StartTraceOptions, TraceAttributes } from './lib/langfuse.js';

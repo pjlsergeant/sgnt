@@ -1,0 +1,1 @@
+- When building either tests or classes, start with the minimum, and work up from there; test the user's understanding of what's going on

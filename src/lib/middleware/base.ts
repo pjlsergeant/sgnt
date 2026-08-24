@@ -1,6 +1,14 @@
 import OpenAI, { APIPromise } from 'openai';
 import type { Logger } from '../logger.js';
 
+export type CompletionContext = {
+  Config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+};
+
+export type EmbeddingContext = {
+  Config: OpenAI.Embeddings.EmbeddingCreateParams;
+};
+
 export type CompletionFn<Args, ReturnValue = APIPromise<OpenAI.Chat.ChatCompletion>> = (
   client: OpenAI,
   config: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
